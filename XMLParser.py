@@ -12,7 +12,9 @@ absPath = os.path.join(str(os.getcwd()), "Abstracts")
 print(absPath)
 if not os.path.exists(absPath):
     os.mkdir(absPath)
-    
+
+tag = "eng"
+languageTag = ""
 for child in root:    
        for childRoot in child:
            if(childRoot.tag == 'MedlineCitation'):
@@ -23,15 +25,18 @@ for child in root:
                        for secondYoungestChild in childRoot:
                            if(secondYoungestChild.tag == 'Article'):
                                for youngestChild in secondYoungestChild:
-                                   if(youngestChild.tag == 'Abstract'):
+                                  if(youngestChild.tag == 'Language'):
+                                      languageTag = youngestChild.text
+                                  if(youngestChild.tag == 'Abstract'):
                                        for baby in youngestChild:
                                            if(baby.tag == 'AbstractText'):
-                                               number += 1
-                                               
-                                               fileName = str(PMID) + ".txt"
-                                               
-                                               with open(absPath + "\\" + fileName, "x") as file:
-                                                   file.write(str(baby.text.encode(sys.stdout.encoding, errors='replace')))
-                                                   file.close()
+                                               if(languageTag == tag):
+                                                   number += 1
+                                                 
+                                                   fileName = languageTag + "-" + str(PMID) + ".txt"
+                                                   
+                                                   with open(absPath + "\\" + fileName, "x") as file:
+                                                       file.write(str(baby.text.encode(sys.stdout.encoding, errors='replace')))
+                                                       file.close()
                                                
                                        
