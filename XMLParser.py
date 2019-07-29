@@ -1,68 +1,78 @@
-'''@author: Toby Stephen'''
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 29 15:14:07 2019
 
+@author: computing
+"""
 
 import xml.etree.ElementTree
 import os
-import sys
 import glob
+import sys
 
-class XMLParser():
-    #root = xml.etree.ElementTree.parse('C:/Users/computing/Desktop/MastersProject/Corpus/ArticleData/pubmed_result3.xml').getroot()
-    #root = xml.etree.ElementTree.parse('C:/Users/computing/Desktop/MastersProject/Corpus/ArticleData/B-Term Abstracts/Fibrosis.xml').getroot()
-    #absPath = "E:\Abstracts"
-    
-    
+outerDict = {}
 
+class newXMLParser():
+    
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') 
+    absPath = os.path.join(desktop, "PVDCorpus19601986")  
+    i = 0    
     def readXML():
-        tag = "eng"
-        languageTag = ""
-        titleText = ""
-        fileName = ""
+
+        PMID = ""
         
-        number = 0
-    
         corporaDir = r"C:\Users\computing\Desktop\UpToDateAbstracts\XML\*.xml"
         
-        desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') 
-        absPath = os.path.join(desktop, "VasospasmCorpus")
-    
-        if not os.path.exists(absPath):
-            os.mkdir(absPath)
+        if not os.path.exists(newXMLParser.absPath):
+            os.mkdir(newXMLParser.absPath)
         
         for file in glob.glob(corporaDir):
             root = xml.etree.ElementTree.parse(file).getroot()
+           
+            for article in root.findall('.//PubmedArticle//MedlineCitation'):  
+                PMID = article.find('.//PMID')
+                title = article.find('.//Article//ArticleTitle')
+                
+                abstract = article.find('.//Article//AbstractText')
+                
+                if PMID is None:
+                    PMIDSaved = "No PMID Found"
+                else:
+                    PMIDSaved = PMID.text
+                    
+                if title is None:
+                    titleSaved = "No Title Found"
+                else:
+                    titleSaved = title.text
+                    
+                if abstract is None:
+                    abstractSaved = "No Abstract Found"
+                else:
+                    abstractSaved = abstract.text
+                    
+                outerDict[PMIDSaved] = [titleSaved, abstractSaved]
         
-            for child in root:    
-               for childRoot in child:
-                   if(childRoot.tag == 'MedlineCitation'):
-                       for childChild in childRoot:
-                           if (childChild.tag == "PMID"):
-                               PMID = childChild.text
-                           if(childChild.tag == 'Article'):
-                               for secondYoungestChild in childRoot:
-                                   if(secondYoungestChild.tag == 'Article'):
-                                       for youngestChild in secondYoungestChild:
-                                          if(youngestChild.tag == 'Language'):
-                                              languageTag = youngestChild.text
-                                          if(youngestChild.tag == 'ArticleTitle'):
-                                              titleText = youngestChild.text
-                                          if(youngestChild.tag == 'Abstract'):
-                                               for baby in youngestChild:
-                                                   if(baby.tag == 'AbstractText'):
-                                                       if(languageTag == tag):
-                                                           number += 1
-                                                         
-                                                           fileName = languageTag + "-" + str(PMID) + ".txt"
-                            
-                                                           if not os.path.isfile(absPath + "\\" + fileName):
-                                                               with open(absPath + "\\" + fileName, "w+") as file:
-                                                                   if baby.text is not None:
-                                                                       if titleText is not None:
-                                                                           file.write(str(titleText.encode("utf-8")) + "\n")
-                                                                           file.write(str(baby.text.encode(sys.stdout.encoding, errors='replace')))
-                                                                           file.close()
-            return absPath
-                                           
-                                   
+        return outerDict                            
+                
+    def saveAbs():
+        for PMID, innerDict in outerDict.items():
+            currentPMID = PMID
+            
+            titleAbsPairing = outerDict[PMID]
+            
+            title = titleAbsPairing[0] + "\n"
+            abstract = titleAbsPairing[1]
+            
+            fileName = str(currentPMID) + ".txt"
+            
+            if abstract != "No Abstract Found":
+                if title != "No Title Found":
+                    with open(newXMLParser.absPath + "\\" + fileName, "w+") as file:
+                        file.write(str(title.encode(sys.stdout.encoding, errors='replace')))
+                        file.write(str(abstract.encode(sys.stdout.encoding, errors='replace')))
+                        file.close()
+                        newXMLParser.i += 1
+                         
 if __name__ == '__main__':
-    XMLParser.readXML()
+    outerDict = newXMLParser.readXML()
+    newXMLParser.saveAbs()
